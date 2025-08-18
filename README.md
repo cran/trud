@@ -1,18 +1,49 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# trud <a href="https://rmgpanw.github.io/trud/"><img src="man/figures/logo.png" align="right" height="138"/></a>
+# trud <a href="https://docs.ropensci.org/trud/"><img src="man/figures/logo.png" align="right" height="138"/></a>
 
 <!-- badges: start -->
 
-[![pkgdown](https://github.com/rmgpanw/trud/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/rmgpanw/trud/actions/workflows/pkgdown.yaml)
+[![pkgcheck](https://github.com/ropensci/trud/actions/workflows/pkgcheck.yaml/badge.svg)](https://github.com/ropensci/trud/actions/workflows/pkgcheck.yaml)
 [![Codecov test
-coverage](https://codecov.io/gh/rmgpanw/trud/branch/main/graph/badge.svg)](https://app.codecov.io/gh/rmgpanw/trud?branch=main)
-[![R-CMD-check](https://github.com/rmgpanw/trud/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/rmgpanw/trud/actions/workflows/R-CMD-check.yaml)
+coverage](https://codecov.io/gh/ropensci/trud/branch/main/graph/badge.svg)](https://app.codecov.io/gh/ropensci/trud?branch=main)
+[![R-CMD-check](https://github.com/ropensci/trud/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ropensci/trud/actions/workflows/R-CMD-check.yaml)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/trud)](https://CRAN.R-project.org/package=trud)
+[![](https://cranlogs.r-pkg.org/badges/last-month/trud)](https://cran.r-project.org/package=trud)
+[![CRAN
+downloads](https://cranlogs.r-pkg.org/badges/grand-total/trud)](https://CRAN.R-project.org/package=trud)
+[![Repo
+Status](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Status at rOpenSci Software Peer
+Review](https://badges.ropensci.org/705_status.svg)](https://github.com/ropensci/software-review/issues/705)
+[![status](https://joss.theoj.org/papers/810bf12b9b80b17cadc82397f5022154/status.svg)](https://joss.theoj.org/papers/810bf12b9b80b17cadc82397f5022154)
 <!-- badges: end -->
 
-The goal of `trud` is to provide a convenient R interface to the [NHS
-TRUD API](https://isd.digital.nhs.uk/trud/users/guest/filters/0/api).
+The goal of `trud` is to provide a convenient R interface to the
+[National Health Service (NHS) England Technology Reference data Update
+Distribution
+(TRUD)](https://isd.digital.nhs.uk/trud/users/guest/filters/0/api).
+
+The NHS TRUD service provides essential reference files that underpin a
+wide range of electronic health record (EHR) areas, both in the UK and
+internationally. These files include clinical coding systems such as
+ICD, Read codes, prescription codes, and the SNOMED CT ontology, with
+regular updates to reflect new knowledge and changes in clinical
+practice. NHS TRUD content supports key research areas like disease
+phenotyping, cohort selection, epidemiology, health services research,
+and the development of risk prediction models.
+
+`trud` enables seamless, programmatic retrieval and updating of NHS TRUD
+release items, removing the need for manual downloads and reducing the
+risk of errors or version drift. This helps researchers maintain
+reproducible, up-to-date analyses — whether as part of ad-hoc studies or
+automated pipelines.
+
+To learn more about NHS TRUD and its available resources, visit the [NHS
+TRUD
+website](https://isd.digital.nhs.uk/trud/users/guest/filters/0/home).
 
 ## Installation
 
@@ -22,95 +53,54 @@ You can install this package from CRAN:
 install.packages("trud")
 ```
 
-Or you can install the development version of `trud` from
-[GitHub](https://github.com/rmgpanw/trud) with:
+Or you can install the development version of `trud` from either
+[GitHub](https://github.com/ropensci/trud) with:
 
 ``` r
-# install.packages("devtools")
-devtools::install_github("rmgpanw/trud")
+# install.packages("pak")
+pak::pak("ropensci/trud")
 ```
 
-You will also need to:
+… or [R Universe](https://ropensci.r-universe.dev/builds) with:
 
-- [Sign up for an
-  account](https://isd.digital.nhs.uk/trud/users/guest/filters/0/account/form)
-  with NHS TRUD
-- Set your API key (shown on your account information page) as an
-  environmental variable named `TRUD_API_KEY`. The best way to do this
-  is by placing your API key in a [`.Renviron`
-  file](https://rstats.wtf/r-startup.html#renviron).
+``` r
+install.packages("trud", repos = c('https://ropensci.r-universe.dev', 'https://cloud.r-project.org'))
+```
 
-## Examples
+You will also need to [sign up for a free
+account](https://isd.digital.nhs.uk/trud/users/guest/filters/0/account/form)
+with NHS TRUD and set up your API key as described in
+`vignette("trud")`.
 
-Retrieve available endpoints[^1]:
+## Getting Started
+
+### Understanding TRUD Subscriptions
+
+**Important**: NHS TRUD operates on a subscription model. After creating
+your account, you must individually subscribe to each item you want to
+access through the [NHS TRUD
+website](https://isd.digital.nhs.uk/trud/users/guest/filters/0/categories/1).
+
+### Recommended Workflow
+
+**Step 0**: Set up your TRUD API key as an environmental variable named
+`TRUD_API_KEY`. For example, create or edit your project `.Renviron`
+file with `usethis::edit_r_environ()`, then populate as follows
+(replacing `e963cc518cc41500e1a8940a93ffc3c0915e2983` with your own API
+key):[^1]
+
+    TRUD_API_KEY=e963cc518cc41500e1a8940a93ffc3c0915e2983
+
+**Step 1**: Check what you’re already subscribed to:
 
 ``` r
 library(trud)
 
-trud_items()
-#> # A tibble: 71 × 2
-#>    item_number item_name                                                        
-#>          <int> <chr>                                                            
-#>  1         246 Cancer Outcomes and Services Data Set XML Schema                 
-#>  2         245 Commissioning Data Set XML Schema                                
-#>  3         599 Community Services Data Set Intermediate Database                
-#>  4         393 Community Services Data Set post-deadline extract XML Schema     
-#>  5         394 Community Services Data Set pre-deadline extract XML Schema      
-#>  6         391 Community Services Data Set XML Schema                           
-#>  7         248 Diagnostic Imaging Data Set XML Schema                           
-#>  8         239 dm+d XML transformation tool                                     
-#>  9        1859 Electronic Prescribing and Medicines Administration Data Sets XM…
-#> 10        1819 Emergency Care Data Set XML Schema                               
-#> # ℹ 61 more rows
-```
-
-Get metadata for an item:
-
-``` r
-get_item_metadata(394) |>
-  purrr::map_at("releases", \(release) purrr::map(release, names))
-#> $apiVersion
-#> [1] "1"
-#> 
-#> $releases
-#> $releases$CSDS_Provpredextract_1.6.6_20221115000001.zip
-#>  [1] "id"                                 "name"                              
-#>  [3] "releaseDate"                        "archiveFileUrl"                    
-#>  [5] "archiveFileName"                    "archiveFileSizeBytes"              
-#>  [7] "archiveFileSha256"                  "archiveFileLastModifiedTimestamp"  
-#>  [9] "checksumFileUrl"                    "checksumFileName"                  
-#> [11] "checksumFileSizeBytes"              "checksumFileLastModifiedTimestamp" 
-#> [13] "signatureFileUrl"                   "signatureFileName"                 
-#> [15] "signatureFileSizeBytes"             "signatureFileLastModifiedTimestamp"
-#> [17] "publicKeyFileUrl"                   "publicKeyFileName"                 
-#> [19] "publicKeyFileSizeBytes"             "publicKeyId"                       
-#> 
-#> $releases$DMDSSCHEMAS_1.5.21_20200805000001
-#>  [1] "id"                                 "name"                              
-#>  [3] "releaseDate"                        "archiveFileUrl"                    
-#>  [5] "archiveFileName"                    "archiveFileSizeBytes"              
-#>  [7] "archiveFileSha256"                  "archiveFileLastModifiedTimestamp"  
-#>  [9] "checksumFileUrl"                    "checksumFileName"                  
-#> [11] "checksumFileSizeBytes"              "checksumFileLastModifiedTimestamp" 
-#> [13] "signatureFileUrl"                   "signatureFileName"                 
-#> [15] "signatureFileSizeBytes"             "signatureFileLastModifiedTimestamp"
-#> [17] "publicKeyFileUrl"                   "publicKeyFileName"                 
-#> [19] "publicKeyFileSizeBytes"             "publicKeyId"                       
-#> 
-#> 
-#> $httpStatus
-#> [1] 200
-#> 
-#> $message
-#> [1] "OK"
-```
-
-Get metadata for all subscribed items:
-
-``` r
+# See items you can currently access
 get_subscribed_metadata()
-#>  ■■■■■■■■■■■■                      37% |  ETA:  3s
-#> # A tibble: 16 × 3
+#>  ■■■■■■■■                          25% |  ETA:  4s
+#>  ■■■■■■■■■■■■■■■■■■■■■■■■          78% |  ETA:  1s
+#> # A tibble: 17 × 3
 #>    item_number item_name                                            metadata    
 #>          <int> <chr>                                                <list>      
 #>  1         394 Community Services Data Set pre-deadline extract XM… <named list>
@@ -126,34 +116,77 @@ get_subscribed_metadata()
 #> 11         255 NHS UK Read Codes Clinical Terms Version 3, Cross M… <named list>
 #> 12          24 NHSBSA dm+d                                          <named list>
 #> 13         264 OPCS-4 eVersion book                                 <named list>
-#> 14         101 SNOMED CT UK Clinical Edition, RF2: Full, Snapshot … <named list>
-#> 15          98 SNOMED CT UK Data Migration Workbench                <named list>
-#> 16        1799 SNOMED CT UK Monolith Edition, RF2: Snapshot         <named list>
+#> 14         659 Primary Care Domain reference sets                   <named list>
+#> 15         101 SNOMED CT UK Clinical Edition, RF2: Full, Snapshot … <named list>
+#> 16          98 SNOMED CT UK Data Migration Workbench                <named list>
+#> 17        1799 SNOMED CT UK Monolith Edition, RF2: Snapshot         <named list>
 ```
 
-Download an item:
+**Step 2**: Browse all available items (note: subscription required for
+access):
 
 ``` r
-# by default the latest release will be downloaded to the current working directory
-x <- download_item(394, directory = tempdir())
-#> ⠙ Downloading archive file for TRUD item 394...
-#> ✔ Successfully downloaded `CSDS_Provpredextract_1.6.6_20221115000001.zip` to '/…
-#> 
-unzip(x, list = TRUE)
-#>                                                   Name Length
-#> 1           CSDS_ProvPreExtract__V1_6_6_SAMPLE_XML.xml   7887
-#> 2              CSDS_ProvPreExtract__V1_6_6_FinalV1.XSD  75650
-#> 3 CSDS ProvPreDExtract v1.6.6 Production Log v0.1.xlsx  32216
-#>                  Date
-#> 1 2022-11-15 12:48:00
-#> 2 2022-10-31 11:36:00
-#> 3 2022-11-15 11:57:00
+# List all available TRUD items
+trud_items()
+#> # A tibble: 73 × 2
+#>    item_number item_name                                                        
+#>          <int> <chr>                                                            
+#>  1         246 Cancer Outcomes and Services Data Set XML Schema                 
+#>  2         245 Commissioning Data Set XML Schema                                
+#>  3         599 Community Services Data Set Intermediate Database                
+#>  4         393 Community Services Data Set post-deadline extract XML Schema     
+#>  5         394 Community Services Data Set pre-deadline extract XML Schema      
+#>  6         391 Community Services Data Set XML Schema                           
+#>  7         248 Diagnostic Imaging Data Set XML Schema                           
+#>  8         239 dm+d XML transformation tool                                     
+#>  9        1859 Electronic Prescribing and Medicines Administration Data Sets XM…
+#> 10        1819 Emergency Care Data Set XML Schema                               
+#> # ℹ 63 more rows
 ```
 
-[^1]: Item numbers can also be found in the URLs of releases pages,
-    between `items` and `releases`. For example, the URL for the
-    [Community Services Data Set pre-deadline extract XML
-    Schema](https://isd.digital.nhs.uk/trud/users/guest/filters/0/categories/1/items/394/releases)
-    releases page is
-    `https://isd.digital.nhs.uk/trud/users/guest/filters/0/categories/1/items/394/releases`
-    and the item number is `394`.
+**Step 3**: Subscribe to additional items you need via the [NHS TRUD
+website](https://isd.digital.nhs.uk/trud/users/guest/filters/0/categories/1),
+then access them:
+
+``` r
+# After subscribing to an item (e.g., item 394), you can:
+
+# Get metadata
+metadata <- get_item_metadata(394)
+
+# Download the item
+file_path <- download_item(394, directory = tempdir())
+```
+
+## Available functionality
+
+The main functions provided by `trud` are:
+
+- `get_subscribed_metadata()`: Shows items you can currently access
+- `trud_items()`: Lists all available items
+- `get_item_metadata()`: Retrieves metadata for a specific item
+- `download_item()`: Downloads files for a specific item
+
+Please see `vignette("trud")` for further information and getting
+started.
+
+## Citing trud
+
+If you find `trud` useful, please consider citing it. Citation details
+are available
+[here](https://docs.ropensci.org/trud/authors.html#citation).
+
+## Community guidelines
+
+Feedback, bug reports, and feature requests are welcome; file issues or
+seek support [here](https://github.com/ropensci/trud/issues). If you
+would like to contribute to the package, please see our [contributing
+guidelines](https://docs.ropensci.org/trud/CONTRIBUTING.html).
+
+Please note that this package is released with a [Contributor Code of
+Conduct](https://ropensci.org/code-of-conduct/). By contributing to this
+project, you agree to abide by its terms.
+
+[^1]: You will also need to restart your R session to set any
+    environmental variables that have been newly-added to your project
+    `.Renviron` file.

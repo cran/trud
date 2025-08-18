@@ -1,37 +1,47 @@
 #' Retrieve metadata for a NHS TRUD item
 #'
+#' @description
 #' Sends a request to the release list endpoint, returning a list of metadata
-#' pertaining to the specified NHS TRUD item.
+#' pertaining to the specified NHS TRUD item. Use the `item` numbers from
+#' [trud_items()] or [get_subscribed_metadata()].
+#'
+#' ```{r child = "man/rmd/subscription-required.Rmd"}
+#' ```
 #'
 #' @inheritParams download_item
-#' @param latest_only If `TRUE`, only metadata pertaining to the latest item
-#'   release will be retrieved. By default this is set to `FALSE`.
+#' @param release_scope Which releases to retrieve metadata for. Use `"all"` to
+#'   get all releases, or `"latest"` to get only the most recent release.
 #'
-#' @return A list.
+#' @returns A list containing item metadata, including release information that
+#'   can be used with [download_item()]. Release IDs for specific downloads are
+#'   in the `id` field of each release.
 #' @export
+#' @seealso
+#' * [trud_items()] to find item numbers
+#' * [get_subscribed_metadata()] to see items you can access
+#' * [download_item()] to download files using this metadata
+#'
+#' @examplesIf identical(Sys.getenv("IN_PKGDOWN"), "true") & Sys.getenv("TRUD_API_KEY") != ""
+#' # Get metadata for Community Services Data Set pre-deadline extract XML Schema
+#' get_item_metadata(394) |>
+#'   # Display structure without showing sensitive API keys in URLs
+#'   purrr::map_at("releases", \(release) purrr::map(release, names))
+#'
+#' # Include metadata for any previous releases using `release_scope = "all"`
+#' get_item_metadata(394, release_scope = "all") |>
+#'   # Display structure without showing sensitive API keys in URLs
+#'   purrr::map_at("releases", \(release) purrr::map(release, names))
 #'
 #' @examples
-#' \dontrun{
-#'  # Get metadata for Community Services Data Set pre-deadline extract XML Schema
-#'  get_item_metadata(394) |>
-#'    purrr::map_at("releases", \(release) purrr::map(release, names))
-#'
-#' # Include metadata for any previous releases using `latest_only = FALSE`
-#' get_item_metadata(394, latest_only = FALSE) |>
-#'    purrr::map_at("releases", \(release) purrr::map(release, names))
-#' }
-#'
 #' # An informative error is raised if your API key is invalid or missing
-#' try(download_item(394, TRUD_API_KEY = "INVALID_API_KEY"))
-get_item_metadata <- function(item,
-                              TRUD_API_KEY = NULL,
-                              latest_only = FALSE) {
+#' try(withr::with_envvar(c("TRUD_API_KEY" = ""), get_item_metadata(394)))
+get_item_metadata <- function(item, release_scope = c("all", "latest")) {
   # validate args
-  TRUD_API_KEY <- get_trud_api_key(TRUD_API_KEY)
+  TRUD_API_KEY <- get_trud_api_key()
 
   validate_arg_item(item = item)
 
-  validate_arg_latest_only(latest_only)
+  release_scope <- validate_arg_release_scope(release_scope)
 
   # Construct the URL with the API key and the item number
   url <-
@@ -43,16 +53,12 @@ get_item_metadata <- function(item,
       "/releases"
     )
 
-  if (latest_only) {
+  if (release_scope == "latest") {
     url <- paste0(url, "?latest")
   }
 
   # Make a GET request and parse the JSON response
-  result <- httr2::request(url) %>%
-    httr2::req_error(body = trud_error_message) %>%
-    req_user_agent_trud() %>%
-    httr2::req_perform() %>%
-    httr2::resp_body_json()
+  result <- request_item_metadata(url)
 
   # name list of releases, using release ids
   names(result$releases) <- purrr::map_chr(result$releases, \(x) x$id)
@@ -60,10 +66,10 @@ get_item_metadata <- function(item,
   return(result)
 }
 
-validate_arg_latest_only <- function(latest_only) {
-  if (!rlang::is_logical(latest_only)) {
-    cli::cli_abort(c(
-      "Argument {.code latest_only} must be either {.code TRUE} or {.code FALSE}."
-    ))
-  }
+request_item_metadata <- function(url) {
+  httr2::request(url) |>
+    req_user_agent_trud() |>
+    handle_trud_request() |>
+    httr2::req_perform() |>
+    httr2::resp_body_json()
 }

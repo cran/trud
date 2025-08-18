@@ -4,28 +4,37 @@
 \alias{get_subscribed_metadata}
 \title{Get metadata for subscribed NHS TRUD items}
 \usage{
-get_subscribed_metadata(TRUD_API_KEY = NULL, latest_only = FALSE)
+get_subscribed_metadata(release_scope = c("all", "latest"))
 }
 \arguments{
-\item{TRUD_API_KEY}{A string. The name of an environmental variable
-containing your TRUD API key. If \code{NULL} (default) this is assumed to be
-called \code{TRUD_API_KEY}.}
-
-\item{latest_only}{If \code{TRUE}, only metadata pertaining to the latest item
-release will be retrieved. By default this is set to \code{FALSE}.}
+\item{release_scope}{Which releases to retrieve metadata for. Use \code{"all"} to
+get all releases, or \code{"latest"} to get only the most recent release.}
 }
 \value{
 A tibble, with item metadata stored in the list column \code{metadata}.
+Use the \code{item_number} column values with \code{\link[=download_item]{download_item()}}.
 }
 \description{
 A convenience wrapper around \code{\link[=trud_items]{trud_items()}} and \code{\link[=get_item_metadata]{get_item_metadata()}},
-retrieving metadata for only items that the user is subscribed to.
+retrieving metadata for only items that the user is subscribed to. This is
+particularly useful for seeing what data you can download with \code{\link[=download_item]{download_item()}}.
+If you need access to additional items, browse available options with
+\code{\link[=trud_items]{trud_items()}}, then subscribe through the NHS TRUD website.
 }
 \examples{
-\dontrun{
-get_subscribed_metadata()
-}
+\dontshow{if (identical(Sys.getenv("IN_PKGDOWN"), "true") & Sys.getenv("TRUD_API_KEY") != "") (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+  # Get metadata for all subscribed items
+  subscribed <- get_subscribed_metadata()
+
+  # Show structure without exposing API keys in URLs
+  subscribed$metadata[[1]] |>
+    purrr::map_at("releases", \(release) purrr::map(release, names))
+\dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=trud_items]{trud_items()}}, \code{\link[=get_item_metadata]{get_item_metadata()}}
+\itemize{
+\item \code{\link[=trud_items]{trud_items()}} to browse all available items
+\item \code{\link[=get_item_metadata]{get_item_metadata()}} for detailed metadata on specific items
+\item \code{\link[=download_item]{download_item()}} to download items you're subscribed to
+}
 }

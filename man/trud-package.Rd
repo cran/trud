@@ -8,14 +8,14 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-A convenient R interface to the 'National Health Service (NHS) Technology Reference Update Distribution (TRUD) API'. Retrieve available releases for items that you are subscribed to and download these with ease. For more information on the API, see \url{https://isd.digital.nhs.uk/trud/users/guest/filters/0/api}.
+Provides a convenient R interface to the 'National Health Service NHS Technology Reference Update Distribution (TRUD) API', allowing users to list available releases for their subscribed items, retrieve metadata, and download release files. For more information on the API, see \url{https://isd.digital.nhs.uk/trud/users/guest/filters/0/api}.
 }
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://rmgpanw.github.io/trud/}
-  \item \url{https://github.com/rmgpanw/trud}
-  \item Report bugs at \url{https://github.com/rmgpanw/trud/issues}
+  \item \url{https://docs.ropensci.org/trud/}
+  \item \url{https://github.com/ropensci/trud}
+  \item Report bugs at \url{https://github.com/ropensci/trud/issues}
 }
 
 }
@@ -27,6 +27,12 @@ Authors:
   \item Robert Luben (\href{https://orcid.org/0000-0002-5088-6343}{ORCID})
   \item Abraham Olvera-Barrios (\href{https://orcid.org/0000-0002-3305-4465}{ORCID})
   \item Chuin Ying Ung (\href{https://orcid.org/0000-0001-8487-4589}{ORCID})
+}
+
+Other contributors:
+\itemize{
+  \item Jon Clayden (\href{https://orcid.org/0000-0002-6608-0619}{ORCID}) [reviewer]
+  \item Alexandros Kouretsis [reviewer]
 }
 
 }

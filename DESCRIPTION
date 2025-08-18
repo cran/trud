@@ -1,6 +1,6 @@
 Package: trud
 Title: Query the 'NHS TRUD API'
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person(given = "Alasdair",
            family = "Warwick",
@@ -12,28 +12,41 @@ Authors@R: c(
     person("Abraham", "Olvera-Barrios", role = "aut",
            comment = c(ORCID = "0000-0002-3305-4465")),
     person("Chuin Ying", "Ung", role = "aut",
-           comment = c(ORCID = "0000-0001-8487-4589"))
+           comment = c(ORCID = "0000-0001-8487-4589")),
+    person(given = "Jon",
+           family = "Clayden",
+           role = c("rev"),
+           comment=c(ORCID="0000-0002-6608-0619")),
+    person(given = "Alexandros",
+           family = "Kouretsis",
+           role = c("rev"))
     )
-Description: A convenient R interface to the 'National Health Service (NHS) 
-    Technology Reference Update Distribution (TRUD) API'. Retrieve available
-    releases for items that you are subscribed to and download these with ease.
-    For more information on the API, see <https://isd.digital.nhs.uk/trud/users/guest/filters/0/api>.
+Description: Provides a convenient R interface to the 'National Health Service 
+    NHS Technology Reference Update Distribution (TRUD) API', allowing users 
+    to list available releases for their subscribed items, retrieve metadata, 
+    and download release files. For more information on the API, see 
+    <https://isd.digital.nhs.uk/trud/users/guest/filters/0/api>.
 License: MIT + file LICENSE
 Encoding: UTF-8
-RoxygenNote: 7.2.3
-Imports: cli, dplyr, httr2, magrittr, purrr, rlang, rvest, stringr,
-        tibble, tidyselect
-URL: https://rmgpanw.github.io/trud/, https://github.com/rmgpanw/trud
-BugReports: https://github.com/rmgpanw/trud/issues
-Suggests: testthat (>= 3.0.0), withr
+RoxygenNote: 7.3.2
+Depends: R (>= 4.2.0)
+Imports: cli, dplyr, httr2, purrr, rlang, rvest, stringr, tibble
+URL: https://docs.ropensci.org/trud/, https://github.com/ropensci/trud
+BugReports: https://github.com/ropensci/trud/issues
+Suggests: knitr, rmarkdown, spelling, testthat (>= 3.0.0), withr
 Config/testthat/edition: 3
+Language: en-US
+VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2024-07-21 14:30:14 UTC; alasdair
-Author: Alasdair Warwick [aut, cre, cph]
-    (<https://orcid.org/0000-0002-0800-2890>),
-  Robert Luben [aut] (<https://orcid.org/0000-0002-5088-6343>),
-  Abraham Olvera-Barrios [aut] (<https://orcid.org/0000-0002-3305-4465>),
-  Chuin Ying Ung [aut] (<https://orcid.org/0000-0001-8487-4589>)
+Packaged: 2025-08-18 20:30:05 UTC; alasdair
+Author: Alasdair Warwick [aut, cre, cph] (ORCID:
+    <https://orcid.org/0000-0002-0800-2890>),
+  Robert Luben [aut] (ORCID: <https://orcid.org/0000-0002-5088-6343>),
+  Abraham Olvera-Barrios [aut] (ORCID:
+    <https://orcid.org/0000-0002-3305-4465>),
+  Chuin Ying Ung [aut] (ORCID: <https://orcid.org/0000-0001-8487-4589>),
+  Jon Clayden [rev] (ORCID: <https://orcid.org/0000-0002-6608-0619>),
+  Alexandros Kouretsis [rev]
 Maintainer: Alasdair Warwick <alasdair.warwick.19@ucl.ac.uk>
 Repository: CRAN
-Date/Publication: 2024-07-23 00:20:02 UTC
+Date/Publication: 2025-08-18 20:50:02 UTC

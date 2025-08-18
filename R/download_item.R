@@ -1,58 +1,84 @@
 #' Download NHS TRUD item
 #'
-#' Downloads files for a specified NHS TRUD item (requires a subscription). By
-#' default this is the latest release.
+#' @description
+#' Downloads files for a specified NHS TRUD item. By default this downloads
+#' the latest release. Use the `item` numbers from [trud_items()] or
+#' [get_subscribed_metadata()].
 #'
-#' @param item An integer, the item to be downloaded.
+#' ```{r child = "man/rmd/subscription-required.Rmd"}
+#' ```
+#'
+#' @section Working with specific releases:
+#' To download a specific (non-latest) release:
+#'
+#' 1. Use [get_item_metadata()] with `release_scope = "all"` to retrieve metadata for all releases
+#' 2. The release IDs are stored under the `id` item for each release
+#' 3. Pass the desired release ID to the `release` parameter of [download_item()]
+#'
+#' @param item An integer, the item to be downloaded. Get these from [trud_items()]
+#'   or [get_subscribed_metadata()].
 #' @param directory Path to the directory to which this item will be downloaded
 #'   to. This is set to the current working directory by default.
-#' @param download_file The item file to be downloaded. Valid values:
-#'   - `"archive"` (the release item)
-#'   - `"checksum"`
-#'   - `"signature"`
-#'   - `"publickKey"`
-#' @param TRUD_API_KEY A string. The name of an environmental variable
-#'   containing your TRUD API key. If `NULL` (default) this is assumed to be
-#'   called `TRUD_API_KEY`.
-#' @param release The name of a specific release ID to be downloaded (this can
-#'   be ascertained using [get_item_metadata()]). If `NULL` (default), then the
-#'   latest item release will be downloaded.
+#' @param file_type The type of file to download. Options are `"archive"` (the
+#'   main release file), `"checksum"`, `"signature"`, or `"publicKey"`. Defaults
+#'   to `"archive"`.
+#' @param release The release ID to be downloaded. Release IDs are found in the
+#'   `id` field of each release from [get_item_metadata()]. If `NULL` (default),
+#'   the latest item release will be downloaded.
+#' @param overwrite If `TRUE`, existing files will be overwritten. If `FALSE`
+#'   (default), existing files will be skipped and the function will return the
+#'   existing file path.
 #'
-#' @return The file path to the downloaded file, returned invisibly.
+#' @returns The file path to the downloaded file, returned invisibly.
 #' @export
+#' @seealso
+#' * [trud_items()] to find item numbers
+#' * [get_subscribed_metadata()] to see items you can access
+#' * [get_item_metadata()] to explore available releases before downloading
+#'
+#' @examplesIf identical(Sys.getenv("IN_PKGDOWN"), "true") & Sys.getenv("TRUD_API_KEY") != ""
+#' # Download Community Services Data Set pre-deadline extract XML Schema
+#' x <- download_item(394, directory = tempdir())
+#'
+#' # List downloaded files
+#' unzip(x, list = TRUE)
+#'
+#' # Download a previous release
+#' # First get all releases to see available options
+#' metadata <- get_item_metadata(394, release_scope = "all")
+#' release_id <- metadata$releases[[2]]$id
+#'
+#' y <- download_item(394, directory = tempdir(), release = release_id)
+#'
+#' unzip(y, list = TRUE)
+#'
+#' # Overwrite existing files if needed
+#' z <- download_item(394, directory = tempdir(), overwrite = TRUE)
 #'
 #' @examples
-#' \dontrun{
-#'  # Download Community Services Data Set pre-deadline extract XML Schema
-#'  x <- download_item(394, directory = tempdir())
-#'
-#'  # List downloaded files
-#'  unzip(x, list = TRUE)
-#'
-#'  # Download a previous release
-#'  release <- get_item_metadata(394)$releases[[2]]$id
-#'
-#'  y <- download_item(394, directory = tempdir(), release = release)
-#'
-#'  unzip(y, list = TRUE)
-#' }
-#'
 #' # An informative error is raised if your API key is invalid or missing
-#' try(download_item(394, TRUD_API_KEY = "INVALID_API_KEY"))
-download_item <- function(item,
-                          directory = ".",
-                          download_file = "archive",
-                          TRUD_API_KEY = NULL,
-                          release = NULL) {
-
+#' try(withr::with_envvar(c("TRUD_API_KEY" = ""), download_item(394)))
+download_item <- function(
+  item,
+  directory = ".",
+  file_type = c("archive", "checksum", "signature", "publicKey"),
+  release = NULL,
+  overwrite = FALSE
+) {
   # validate args
   validate_arg_item(item = item)
 
   validate_arg_directory(directory = directory)
 
-  validate_arg_download_file(download_file = download_file)
+  file_type <- rlang::arg_match(file_type)
 
-  get_trud_api_key(TRUD_API_KEY)
+  get_trud_api_key()
+
+  if (!rlang::is_logical(overwrite)) {
+    cli::cli_abort(c(
+      "Argument {.code overwrite} must be either {.code TRUE} or {.code FALSE}."
+    ))
+  }
 
   if (!is.null(release)) {
     if (!rlang::is_string(release)) {
@@ -61,22 +87,22 @@ download_item <- function(item,
   }
 
   # get file URLs
-  latest_only <- FALSE
+  release_scope <- if (is.null(release)) "latest" else "all"
 
-  if (is.null(release)) {
-    latest_only <- TRUE
-  }
-
-  item_metadata <- get_item_metadata(item = item,
-                                     TRUD_API_KEY = TRUD_API_KEY,
-                                     latest_only = latest_only)
+  item_metadata <- get_item_metadata(
+    item = item,
+    release_scope = release_scope
+  )
 
   # validate `release`
   if (!is.null(release)) {
     if (!release %in% names(item_metadata$releases)) {
       cli::cli_abort(
-        c("x" = "Unrecognised {.code release} supplied for item {item}.",
-          "i" = "See available releases with {.code get_item_metadata(item = {item}, latest_only = FALSE)}.")
+        c(
+          "x" = "Unrecognised {.code release} supplied for item {item}.",
+          "i" = "See available releases with {.code get_item_metadata(item = {item}, release_scope = \"all\")}."
+        ),
+        class = "unrecognised_trud_item_release"
       )
     }
   } else {
@@ -88,35 +114,64 @@ download_item <- function(item,
     item_metadata,
     "releases",
     release,
-    paste0(download_file, "FileName")
+    paste0(file_type, "FileName")
   )
 
   file_path <-
-    file.path(directory,
-              file_name)
+    file.path(
+      directory,
+      file_name
+    )
 
-  if (file.exists(file_path)) {
+  if (file.exists(file_path) && !overwrite) {
+    file_path <- normalizePath(file_path)
+
     cli::cli_warn(
-        c("!" = "File {.code {file_name}} already exists in directory {.code {directory}}",
-          "i" = "Returning file path {.path {file_path}}")
+      c(
+        "!" = "Skipping download:",
+        "!" = "File {.code {file_name}} already exists in directory {.code {directory}}",
+        "i" = "Returning file path {.path {file_path}}",
+        "i" = "Use {.code overwrite = TRUE} to overwrite existing files"
       )
+    )
 
-    return(file_path)
+    invisible(file_path)
   }
 
-  url <- purrr::pluck(item_metadata,
-                      "releases",
-                      release,
-                      paste0(download_file, "FileUrl"))
+  url <- purrr::pluck(
+    item_metadata,
+    "releases",
+    release,
+    paste0(file_type, "FileUrl")
+  )
 
-  cli::cli_progress_step("Downloading {download_file} file for TRUD item {item}...",
-                         msg_done = "Successfully downloaded {.code {file_name}} to {.path {file_path}}.",
-                         spinner = TRUE)
+  cli::cli_progress_step(
+    "Downloading {file_type} file for TRUD item {item}...",
+    msg_done = "Successfully downloaded {.code {file_name}} to {.path {file_path}}.",
+    spinner = TRUE
+  )
 
-  resp <- httr2::request(url) %>%
-    req_user_agent_trud() %>%
-    httr2::req_perform(path = file_path)
+  resp_file_path <- request_download_item(url, file_path) |>
+    purrr::pluck("body") |>
+    unclass() |>
+    normalizePath()
 
   # return path to downloaded file invisibly
-  invisible(file_path)
+  invisible(resp_file_path)
+}
+
+#' Performs request to download an item from NHS TRUD
+#'
+#' Used by [download_item()]. Facilitates mocking in unit testing.
+#'
+#' @param url String. Request URL, obtained using [get_item_metadata()].
+#' @param file_path File path to download item to.
+#'
+#' @return httr2 HTTP response.
+#' @noRd
+request_download_item <- function(url, file_path) {
+  httr2::request(url) |>
+    req_user_agent_trud() |>
+    handle_trud_request() |>
+    httr2::req_perform(path = file_path)
 }

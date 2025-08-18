@@ -4,36 +4,52 @@
 \alias{get_item_metadata}
 \title{Retrieve metadata for a NHS TRUD item}
 \usage{
-get_item_metadata(item, TRUD_API_KEY = NULL, latest_only = FALSE)
+get_item_metadata(item, release_scope = c("all", "latest"))
 }
 \arguments{
-\item{item}{An integer, the item to be downloaded.}
+\item{item}{An integer, the item to be downloaded. Get these from \code{\link[=trud_items]{trud_items()}}
+or \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}}.}
 
-\item{TRUD_API_KEY}{A string. The name of an environmental variable
-containing your TRUD API key. If \code{NULL} (default) this is assumed to be
-called \code{TRUD_API_KEY}.}
-
-\item{latest_only}{If \code{TRUE}, only metadata pertaining to the latest item
-release will be retrieved. By default this is set to \code{FALSE}.}
+\item{release_scope}{Which releases to retrieve metadata for. Use \code{"all"} to
+get all releases, or \code{"latest"} to get only the most recent release.}
 }
 \value{
-A list.
+A list containing item metadata, including release information that
+can be used with \code{\link[=download_item]{download_item()}}. Release IDs for specific downloads are
+in the \code{id} field of each release.
 }
 \description{
 Sends a request to the release list endpoint, returning a list of metadata
-pertaining to the specified NHS TRUD item.
+pertaining to the specified NHS TRUD item. Use the \code{item} numbers from
+\code{\link[=trud_items]{trud_items()}} or \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}}.
+
+\emph{\strong{Subscription Required}}
+
+You must subscribe to TRUD items individually through the NHS TRUD website
+before you can access them using \code{\link[=get_item_metadata]{get_item_metadata()}} or \code{\link[=download_item]{download_item()}}.
+Simply having an API key is not sufficient. To see items you're already
+subscribed to, use \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}}. To browse all available
+items, use \code{\link[=trud_items]{trud_items()}}.
 }
 \examples{
-\dontrun{
- # Get metadata for Community Services Data Set pre-deadline extract XML Schema
- get_item_metadata(394) |>
-   purrr::map_at("releases", \(release) purrr::map(release, names))
+\dontshow{if (identical(Sys.getenv("IN_PKGDOWN"), "true") & Sys.getenv("TRUD_API_KEY") != "") (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+# Get metadata for Community Services Data Set pre-deadline extract XML Schema
+get_item_metadata(394) |>
+  # Display structure without showing sensitive API keys in URLs
+  purrr::map_at("releases", \(release) purrr::map(release, names))
 
-# Include metadata for any previous releases using `latest_only = FALSE`
-get_item_metadata(394, latest_only = FALSE) |>
-   purrr::map_at("releases", \(release) purrr::map(release, names))
-}
-
+# Include metadata for any previous releases using `release_scope = "all"`
+get_item_metadata(394, release_scope = "all") |>
+  # Display structure without showing sensitive API keys in URLs
+  purrr::map_at("releases", \(release) purrr::map(release, names))
+\dontshow{\}) # examplesIf}
 # An informative error is raised if your API key is invalid or missing
-try(download_item(394, TRUD_API_KEY = "INVALID_API_KEY"))
+try(withr::with_envvar(c("TRUD_API_KEY" = ""), get_item_metadata(394)))
+}
+\seealso{
+\itemize{
+\item \code{\link[=trud_items]{trud_items()}} to find item numbers
+\item \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}} to see items you can access
+\item \code{\link[=download_item]{download_item()}} to download files using this metadata
+}
 }

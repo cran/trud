@@ -7,56 +7,83 @@
 download_item(
   item,
   directory = ".",
-  download_file = "archive",
-  TRUD_API_KEY = NULL,
-  release = NULL
+  file_type = c("archive", "checksum", "signature", "publicKey"),
+  release = NULL,
+  overwrite = FALSE
 )
 }
 \arguments{
-\item{item}{An integer, the item to be downloaded.}
+\item{item}{An integer, the item to be downloaded. Get these from \code{\link[=trud_items]{trud_items()}}
+or \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}}.}
 
 \item{directory}{Path to the directory to which this item will be downloaded
 to. This is set to the current working directory by default.}
 
-\item{download_file}{The item file to be downloaded. Valid values:
-\itemize{
-\item \code{"archive"} (the release item)
-\item \code{"checksum"}
-\item \code{"signature"}
-\item \code{"publickKey"}
-}}
+\item{file_type}{The type of file to download. Options are \code{"archive"} (the
+main release file), \code{"checksum"}, \code{"signature"}, or \code{"publicKey"}. Defaults
+to \code{"archive"}.}
 
-\item{TRUD_API_KEY}{A string. The name of an environmental variable
-containing your TRUD API key. If \code{NULL} (default) this is assumed to be
-called \code{TRUD_API_KEY}.}
+\item{release}{The release ID to be downloaded. Release IDs are found in the
+\code{id} field of each release from \code{\link[=get_item_metadata]{get_item_metadata()}}. If \code{NULL} (default),
+the latest item release will be downloaded.}
 
-\item{release}{The name of a specific release ID to be downloaded (this can
-be ascertained using \code{\link[=get_item_metadata]{get_item_metadata()}}). If \code{NULL} (default), then the
-latest item release will be downloaded.}
+\item{overwrite}{If \code{TRUE}, existing files will be overwritten. If \code{FALSE}
+(default), existing files will be skipped and the function will return the
+existing file path.}
 }
 \value{
 The file path to the downloaded file, returned invisibly.
 }
 \description{
-Downloads files for a specified NHS TRUD item (requires a subscription). By
-default this is the latest release.
+Downloads files for a specified NHS TRUD item. By default this downloads
+the latest release. Use the \code{item} numbers from \code{\link[=trud_items]{trud_items()}} or
+\code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}}.
+
+\emph{\strong{Subscription Required}}
+
+You must subscribe to TRUD items individually through the NHS TRUD website
+before you can access them using \code{\link[=get_item_metadata]{get_item_metadata()}} or \code{\link[=download_item]{download_item()}}.
+Simply having an API key is not sufficient. To see items you're already
+subscribed to, use \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}}. To browse all available
+items, use \code{\link[=trud_items]{trud_items()}}.
 }
+\section{Working with specific releases}{
+
+To download a specific (non-latest) release:
+\enumerate{
+\item Use \code{\link[=get_item_metadata]{get_item_metadata()}} with \code{release_scope = "all"} to retrieve metadata for all releases
+\item The release IDs are stored under the \code{id} item for each release
+\item Pass the desired release ID to the \code{release} parameter of \code{\link[=download_item]{download_item()}}
+}
+}
+
 \examples{
-\dontrun{
- # Download Community Services Data Set pre-deadline extract XML Schema
- x <- download_item(394, directory = tempdir())
+\dontshow{if (identical(Sys.getenv("IN_PKGDOWN"), "true") & Sys.getenv("TRUD_API_KEY") != "") (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+# Download Community Services Data Set pre-deadline extract XML Schema
+x <- download_item(394, directory = tempdir())
 
- # List downloaded files
- unzip(x, list = TRUE)
+# List downloaded files
+unzip(x, list = TRUE)
 
- # Download a previous release
- release <- get_item_metadata(394)$releases[[2]]$id
+# Download a previous release
+# First get all releases to see available options
+metadata <- get_item_metadata(394, release_scope = "all")
+release_id <- metadata$releases[[2]]$id
 
- y <- download_item(394, directory = tempdir(), release = release)
+y <- download_item(394, directory = tempdir(), release = release_id)
 
- unzip(y, list = TRUE)
-}
+unzip(y, list = TRUE)
 
+# Overwrite existing files if needed
+z <- download_item(394, directory = tempdir(), overwrite = TRUE)
+\dontshow{\}) # examplesIf}
 # An informative error is raised if your API key is invalid or missing
-try(download_item(394, TRUD_API_KEY = "INVALID_API_KEY"))
+try(withr::with_envvar(c("TRUD_API_KEY" = ""), download_item(394)))
+}
+\seealso{
+\itemize{
+\item \code{\link[=trud_items]{trud_items()}} to find item numbers
+\item \code{\link[=get_subscribed_metadata]{get_subscribed_metadata()}} to see items you can access
+\item \code{\link[=get_item_metadata]{get_item_metadata()}} to explore available releases before downloading
+}
 }
