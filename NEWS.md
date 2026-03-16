@@ -1,3 +1,10 @@
+# trud 0.2.1
+
+## Bug fixes
+
+* Fixed download failure for items with spaces in archive filenames by
+  URL-encoding the download URL (#7).
+
 # trud 0.2.0
 
 ## Major changes
